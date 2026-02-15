@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
+import LandingPage from './pages/LandingPage';
 import LoginScreen from './components/LoginScreen';
 import Layout from './components/Layout';
 import Dashboard from './pages/caregiver/Dashboard';
@@ -16,7 +17,8 @@ export default function App() {
     <AppProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<LoginScreen />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginScreen />} />
 
           {/* Caregiver routes */}
           <Route element={<Layout />}>
