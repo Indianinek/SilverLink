@@ -1,12 +1,27 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Check, Clock, AlertCircle } from 'lucide-react';
 
 export default function EmarModule() {
     const { residents, administerMed } = useApp();
-    const [selectedId, setSelectedId] = useState(residents[0]?.id || null);
+    const [selectedId, setSelectedId] = useState(null);
+
+    // Auto-select first resident when loaded
+    useEffect(() => {
+        if (!selectedId && residents.length > 0) {
+            setSelectedId(residents[0].id);
+        }
+    }, [residents, selectedId]);
 
     const resident = residents.find(r => r.id === selectedId);
+
+    if (!resident && residents.length > 0) {
+        return (
+            <div className="flex items-center justify-center p-20">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
 
     const formatTime = (iso) => {
         if (!iso) return null;

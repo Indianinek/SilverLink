@@ -38,7 +38,7 @@ const navConfig = {
 };
 
 export default function Layout() {
-    const { role, setRole } = useApp();
+    const { role, setRole, loading } = useApp();
     const navigate = useNavigate();
     const config = navConfig[role];
 
@@ -46,6 +46,14 @@ export default function Layout() {
         setRole(null);
         navigate('/');
     };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-bg flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
 
     if (!config) return null;
 

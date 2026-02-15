@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { AlertTriangle, Calendar, FileText, AlertCircle } from 'lucide-react';
 
@@ -10,15 +10,26 @@ const severityOptions = [
 
 export default function IncidentLog() {
     const { residents, incidents, addIncident } = useApp();
-    const [form, setForm] = useState({ residentId: residents[0]?.id || '', date: new Date().toISOString().slice(0, 16), description: '', severity: 'low' });
+    const [form, setForm] = useState({
+        residentId: '',
+        date: new Date().toISOString().slice(0, 16),
+        description: '',
+        severity: 'low'
+    });
+
+    // Sync form with first resident when loaded
+    useEffect(() => {
+        if (!form.residentId && residents.length > 0) {
+            setForm(f => ({ ...f, residentId: residents[0].id }));
+        }
+    }, [residents, form.residentId]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!form.description.trim()) return;
-        const res = residents.find(r => r.id === Number(form.residentId));
+
         addIncident({
             residentId: Number(form.residentId),
-            residentName: res ? `${res.firstName} ${res.lastName}` : 'Nieznany',
             date: form.date,
             description: form.description,
             severity: form.severity
@@ -83,12 +94,15 @@ export default function IncidentLog() {
                     <div className="divide-y divide-border">
                         {incidents.map(inc => {
                             const sev = severityOptions.find(s => s.value === inc.severity);
+                            const resident = residents.find(r => r.id === inc.residentId);
                             return (
                                 <div key={inc.id} className="p-4 hover:bg-bg/50 transition-colors">
                                     <div className="flex items-center justify-between mb-2">
                                         <div className="flex items-center gap-2">
                                             <AlertCircle className="w-4 h-4 text-text-secondary" />
-                                            <span className="text-sm font-medium text-text">{inc.residentName}</span>
+                                            <span className="text-sm font-medium text-text">
+                                                {resident ? `${resident.firstName} ${resident.lastName}` : 'Nieznany'}
+                                            </span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${sev?.color || ''}`}>{sev?.label}</span>

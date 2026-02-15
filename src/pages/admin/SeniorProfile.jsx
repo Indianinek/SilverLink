@@ -1,12 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { User, Phone, AlertTriangle, Pill, Activity, Heart } from 'lucide-react';
 
 export default function SeniorProfile() {
     const { residents } = useApp();
-    const [selectedId, setSelectedId] = useState(residents[0]?.id || null);
+    const [selectedId, setSelectedId] = useState(null);
+
+    // Auto-select first resident when loaded
+    useEffect(() => {
+        if (!selectedId && residents.length > 0) {
+            setSelectedId(residents[0].id);
+        }
+    }, [residents, selectedId]);
+
     const resident = residents.find(r => r.id === selectedId);
-    if (!resident) return null;
+    if (!resident) {
+        return (
+            <div className="flex items-center justify-center p-20">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
 
     const allMeals = Object.values(resident.meals).every(Boolean);
     const medsGiven = resident.medications.filter(m => m.administeredAt).length;
