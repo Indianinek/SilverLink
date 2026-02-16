@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { User, Phone, AlertTriangle, Pill, Activity, Heart } from 'lucide-react';
+import { User, Phone, AlertTriangle, Pill, Activity, Heart, Plus } from 'lucide-react';
+import AddResidentModal from '../../components/AddResidentModal';
 
 export default function SeniorProfile() {
-    const { residents } = useApp();
+    const { residents, loading } = useApp();
     const [selectedId, setSelectedId] = useState(null);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
     // Auto-select first resident when loaded
     useEffect(() => {
@@ -14,7 +16,9 @@ export default function SeniorProfile() {
     }, [residents, selectedId]);
 
     const resident = residents.find(r => r.id === selectedId);
-    if (!resident) {
+
+    // Render loading state if residents are loading or if we have residents but none selected yet
+    if (loading || (residents.length > 0 && !resident)) {
         return (
             <div className="flex items-center justify-center p-20">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -22,18 +26,47 @@ export default function SeniorProfile() {
         );
     }
 
-    const allMeals = Object.values(resident.meals).every(Boolean);
-    const medsGiven = resident.medications.filter(m => m.administeredAt).length;
-    const medsTotal = resident.medications.length;
+    // Render empty state if no residents exist (and not adding one)
+    if (!resident && residents.length === 0 && !isAddModalOpen) {
+        return (
+            <div className="flex flex-col items-center justify-center p-20 gap-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <button onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary-dark transition-all">
+                    <Plus className="w-4 h-4" /> Dodaj pierwszego rezydenta
+                </button>
+                {isAddModalOpen && <AddResidentModal onClose={() => setIsAddModalOpen(false)} />}
+            </div>
+        );
+    }
+
+    if (!resident && isAddModalOpen) {
+        return <AddResidentModal onClose={() => setIsAddModalOpen(false)} />;
+    }
+
+    // Safety check for resident data structure
+    const meals = resident?.meals || { breakfast: false, lunch: false, dinner: false };
+    const medications = resident?.medications || [];
+
+    const allMeals = Object.values(meals).every(Boolean);
+    const medsGiven = medications.filter(m => m.administeredAt).length;
+    const medsTotal = medications.length;
 
     return (
         <div>
-            <div className="mb-8">
-                <h2 className="text-xl sm:text-2xl font-bold text-text">Profil Seniora 360°</h2>
-                <p className="text-sm text-text-secondary mt-1">Kompletny widok danych podopiecznego</p>
+            {isAddModalOpen && <AddResidentModal onClose={() => setIsAddModalOpen(false)} />}
+
+            <div className="mb-8 flex justify-between items-end">
+                <div>
+                    <h2 className="text-xl sm:text-2xl font-bold text-text">Profil Seniora 360°</h2>
+                    <p className="text-sm text-text-secondary mt-1">Kompletny widok danych podopiecznego</p>
+                </div>
+                <button onClick={() => setIsAddModalOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary-dark transition-all shadow-sm hover:translate-y-px">
+                    <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Dodaj Rezydenta</span>
+                </button>
             </div>
 
-            <div className="mb-8 flex gap-2 overflow-x-auto pb-2">
+            <div className="mb-8 flex gap-2 overflow-x-auto pb-2 scrollbar-none">
                 {residents.map(r => (
                     <button key={r.id} onClick={() => setSelectedId(r.id)}
                         className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${selectedId === r.id ? 'bg-primary text-white shadow-md' : 'bg-bg-card border border-border text-text-secondary hover:border-primary/30'

@@ -233,6 +233,47 @@ export function AppProvider({ children }) {
         }
     }, []);
 
+    const addResident = useCallback(async (resident) => {
+        // Prepare snake_case payload
+        const payload = {
+            first_name: resident.firstName,
+            last_name: resident.lastName,
+            age: resident.age,
+            room: resident.room,
+            photo: resident.photo,
+            emergency_contact: resident.emergencyContact,
+            allergies: resident.allergies || [],
+            diagnoses: resident.diagnoses || [],
+            meals: { breakfast: false, lunch: false, dinner: false },
+            hygiene: false,
+            walk: false
+        };
+
+        const { data, error } = await supabase
+            .from('residents')
+            .insert([payload])
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Error adding resident:', error);
+            showToast('Błąd dodawania rezydenta');
+            return false;
+        } else {
+            // Map back to camelCase
+            const newResident = {
+                ...data,
+                firstName: data.first_name,
+                lastName: data.last_name,
+                emergencyContact: data.emergency_contact,
+                medications: [] // Init empty medications
+            };
+            setResidents(prev => [...prev, newResident]);
+            showToast('Rezydent dodany ✓');
+            return true;
+        }
+    }, [showToast]);
+
     return (
         <AppContext.Provider value={{
             residents,
@@ -251,6 +292,7 @@ export function AppProvider({ children }) {
             addFeedItem,
             addIncident,
             addChatMessage,
+            addResident,
             showToast
         }}>
             {children}
